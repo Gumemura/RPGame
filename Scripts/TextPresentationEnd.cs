@@ -38,8 +38,8 @@ public class TextPresentationEnd : TextPresentation
     {
         if(textPresentationEnd){
         	textDisplay.text = "";
-        	forms.SetActive(true);
         	textPresentationEnd = false;
+            retryButton.SetActive(true);
         }
     }
 
@@ -51,41 +51,8 @@ public class TextPresentationEnd : TextPresentation
     	keyboard.active = false;
     }
 
-    public void setName(){
-    	userName = nameInputField.text;
-    }
-
-    public void setEmail(){
-    	userEmail = emailInputField.text;
-    }
-
-    public void setBirth(){
-    	userBirthDay = birthInputField.text;
-    }
-
-    public void done(){
-    	forms.SetActive(false);
-        #if UNITY_ANDROID
-    	//send to api
-    	StartCoroutine(Upload());
-        #endif
-    	retryButton.SetActive(true);
-    }
-
     public void retry(){
 		SceneManager.LoadScene("Game");
-    }
-
-    IEnumerator Upload(){
-        WWWForm form = new WWWForm();
-        form.AddField("candidate", meTheAutor);
-        form.AddField("fullname", userName);
-        form.AddField("email", userEmail);
-        form.AddField("birthdate", userBirthDay);
-
-        using (UnityWebRequest www = UnityWebRequest.Post("https://sweetbonus.com.br/sweet-juice/trainee-test/submit?", form)){
-            yield return www.SendWebRequest();
-        }
     }
 }
 

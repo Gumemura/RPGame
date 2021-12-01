@@ -2795,8 +2795,8 @@ MonoBehaviour:
   textDisplay: {fileID: 791812723}
   timeToDisplay: 3
   displayTexts:
-  - Thanks! We now have all letter thanks to you!
-  - You can now properly introduce yourself to us
+  - Thanks! We now have all letter!
+  - Hope to see you again :)
   textPresentationEnd: 0
   userName: 
   userEmail: 
