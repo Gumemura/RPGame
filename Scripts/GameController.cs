@@ -11,132 +11,140 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using TMPro; 
 
+namespace gameController{
+	public class GameController : MonoBehaviour
+	{ 
+		public Hero hero; //the controlable hero
+		public Button retryButton;
+		public GameObject tutorial;
 
-public class GameController : MonoBehaviour
-{ 
-	public Hero hero; //the controlable hero
-	public Button retryButton;
-	public GameObject tutorial;
+		private float halfWidthOfTheScreen; //x coordinate of half of the screen
+		private float halfHeightOfTheScreen; //x coordinate of half of the screen
+		private string thisScene = "Game"; //used to realod the game in case of death
+		private bool canPlay = true; //set to false if player die. used to prevent input while the death animation is going on
+		private GlobalParameters gp; //class that stores all global variables
 
-	private float halfWidthOfTheScreen; //x coordinate of half of the screen
-	private float halfHeightOfTheScreen; //x coordinate of half of the screen
-	private string thisScene = "Game"; //used to realod the game in case of death
-	private bool canPlay = true; //set to false if player die. used to prevent input while the death animation is going on
-	private GlobalParameters gp; //class that stores all global variables
+		private bool goingToJump; //used to prevent movement
+		private bool isJumping = false; //hero is jumping
 
-	private bool goingToJump; //used to prevent movement
-	private bool isJumping = false; //hero is jumping
+		void Start()
+		{
+			#if !UNITY_EDITOR//makes tutorial be displayed only at the first time its played
+				if(PlayerPrefs.GetInt("firstPlay") != 1){
+					tutorial.SetActive(true);
+				}
+				PlayerPrefs.SetInt("firstPlay", 1);
+			#endif
 
-	void Start()
-	{
-		#if !UNITY_EDITOR//makes tutorial be displayed only at the first time its played
-			if(PlayerPrefs.GetInt("firstPlay") != 1){
-				tutorial.SetActive(true);
-			}
-			PlayerPrefs.SetInt("firstPlay", 1);
-		#endif
+			gp = new GlobalParameters();
+			halfWidthOfTheScreen = Display.main.systemWidth / 2;
+			halfHeightOfTheScreen = Display.main.systemHeight / 3;
+		}
 
-		gp = new GlobalParameters();
-		halfWidthOfTheScreen = Display.main.systemWidth / 2;
-		halfHeightOfTheScreen = Display.main.systemHeight / 3;
-	}
+		void Update(){
+			if(canPlay){
+				#if UNITY_ANDROID
+					foreach(Touch touch in Input.touches){
+						switch (touch.phase){
+							case TouchPhase.Began:
+								tutorial.SetActive(false);
+								//jump
+								if(touch.position.y >= halfHeightOfTheScreen && !isJumping){
+									hero.jump();
+									isJumping = true;
+								}else if(touch.position.y < halfHeightOfTheScreen){
+									hero.turnOnOffMovementAnim();
+								}
+								break;
 
-	void Update(){
-		if(canPlay){
-			#if UNITY_ANDROID
-				foreach(Touch touch in Input.touches){
-					switch (touch.phase){
-						case TouchPhase.Began:
-							tutorial.SetActive(false);
-							//jump
-							if(touch.position.y >= halfHeightOfTheScreen && !isJumping){
-								hero.jump();
-								isJumping = true;
-							}else if(touch.position.y < halfHeightOfTheScreen){
-								hero.turnOnOffMovementAnim();
+							case TouchPhase.Ended:
+								if(touch.position.y <= halfHeightOfTheScreen){
+									hero.turnOnOffMovementAnim();
+								}
+								break;   
+						}
+
+						//movement
+						if(touch.position.y < halfHeightOfTheScreen){
+							if(touch.position.x >= halfWidthOfTheScreen){
+								hero.move(1);//moving right
+							}else{
+								hero.move(-1);//moving left
 							}
-							break;
-
-						case TouchPhase.Ended:
-							if(touch.position.y <= halfHeightOfTheScreen){
-								hero.turnOnOffMovementAnim();
-							}
-							break;   
-					}
-
-					//movement
-					if(touch.position.y < halfHeightOfTheScreen){
-						if(touch.position.x >= halfWidthOfTheScreen){
-							hero.move(1);//moving right
-						}else{
-							hero.move(-1);//moving left
 						}
 					}
-				}
-				//this is the variable responsible for only one time jumping and not allowing jump when falling
-				isJumping = hero.triggerJumpAnim();
-			#else
-				if(Input.GetKeyDown(KeyCode.LeftArrow) || Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyUp(KeyCode.LeftArrow) || Input.GetKeyUp(KeyCode.RightArrow)){
-					tutorial.SetActive(false);
-					hero.turnOnOffMovementAnim();
-				}
-
-				if(Input.GetKey(KeyCode.LeftArrow)){
-					hero.move(-1);
-				}
-				if(Input.GetKey(KeyCode.RightArrow)){
-					hero.move(1);
-				}
-
-				if(Input.GetKeyDown(KeyCode.UpArrow)){
-					tutorial.SetActive(false);
-					if(!isJumping){
-						hero.jump();
-						isJumping = true;
+					//this is the variable responsible for only one time jumping and not allowing jump when falling
+					isJumping = hero.triggerJumpAnim();
+				#else
+					if(Input.GetKeyDown(KeyCode.LeftArrow) || Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyUp(KeyCode.LeftArrow) || Input.GetKeyUp(KeyCode.RightArrow)){
+						tutorial.SetActive(false);
+						hero.turnOnOffMovementAnim();
 					}
-				}
+
+					if(Input.GetKey(KeyCode.LeftArrow)){
+						hero.move(-1);
+					}
+					if(Input.GetKey(KeyCode.RightArrow)){
+						hero.move(1);
+					}
+
+					if(Input.GetKeyDown(KeyCode.UpArrow)){
+						tutorial.SetActive(false);
+						if(!isJumping){
+							hero.jump();
+							isJumping = true;
+						}
+					}
+					isJumping = hero.triggerJumpAnim();
+				#endif
+			}else{
 				isJumping = hero.triggerJumpAnim();
-			#endif
-		}
-
-		//always checking if its gameover
-		gameOverConditions();
-	}
-
-	void gameOverConditions(){
-		if(hero.transform.position.y < gp.fallDeath){ //death by fall
-			canPlay = false;
-			retryButton.gameObject.SetActive(true);
-			#if !UNITY_ANDROID
-			if (Input.GetKeyUp(KeyCode.Space)){
-				reloadGameScene();
+				hero.turnOnOffMovementAnimFORCE();
 			}
-			#endif
+
+			//always checking if its gameover
+			gameOverConditions();
 		}
 
-		if(hero.deathMessenger()){ //death by contact with monster
-			StartCoroutine(hero.death());
-			StartCoroutine(displayReplayButton(3));
-			hero.imDeath = false;
+		void gameOverConditions(){
+			if(hero.transform.position.y < gp.fallDeath){ //death by fall
+				canPlay = false;
+				retryButton.gameObject.SetActive(true);
+				#if !UNITY_ANDROID
+				if (Input.GetKeyUp(KeyCode.Space)){
+					reloadGameScene();
+				}
+				#endif
+			}
+
+			if(hero.deathMessenger()){ //death by contact with monster
+				StartCoroutine(hero.death());
+				StartCoroutine(displayReplayButton(3));
+				hero.imDeath = false;
+				canPlay = false;
+			}
+		}
+
+		IEnumerator displayReplayButton(int waitTime){
+			yield return new WaitForSeconds(waitTime);
+			retryButton.gameObject.SetActive(true);
+	    	yield break;
+		}
+
+		IEnumerator gameOver(){
+			yield return new WaitForSeconds(1);
+			hero.death();
+			yield return new WaitForSeconds(2);
+			retryButton.gameObject.SetActive(true);
+		}
+
+		//realod the game in case of detah. called by retry button
+		public void reloadGameScene(){
+			SceneManager.LoadScene(thisScene);
+		}
+
+		public void turnGameOff(){
 			canPlay = false;
 		}
-	}
-
-	IEnumerator displayReplayButton(int waitTime){
-		yield return new WaitForSeconds(waitTime);
-		retryButton.gameObject.SetActive(true);
-    	yield break;
-	}
-
-	IEnumerator gameOver(){
-		yield return new WaitForSeconds(1);
-		hero.death();
-		yield return new WaitForSeconds(2);
-		retryButton.gameObject.SetActive(true);
-	}
-
-	//realod the game in case of detah. called by retry button
-	public void reloadGameScene(){
-		SceneManager.LoadScene(thisScene);
 	}
 }

@@ -15,7 +15,7 @@ public class GameScenePresentation : MonoBehaviour
     }
 
     IEnumerator raiseStripe(Transform stripe, float destY){
-    	Vector2 destination = new Vector3(stripe.localPosition.x, destY, 1);
+    	Vector2 destination = new Vector3(stripe.localPosition.x, destY, 0);
     	while(stripe.localPosition.y < destY){
     		stripe.localPosition = Vector3.MoveTowards(stripe.localPosition, destination, stripeVelocity * Time.deltaTime);
     		yield return null;

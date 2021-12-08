@@ -25,7 +25,7 @@ public class TextPresentationEnd : TextPresentation
 	public TMP_InputField birthInputField;
 
 	private TouchScreenKeyboard keyboard;
-	private string meTheAutor = "guilherme";
+	//private string meTheAutor = "guilherme";
 
     // Start is called before the first frame update
     void Start()

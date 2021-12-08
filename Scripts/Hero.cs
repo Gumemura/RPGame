@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using trophies.a;
 
 public class Hero : MonoBehaviour
 { 
@@ -22,6 +23,10 @@ public class Hero : MonoBehaviour
         heroSpriteRenderer = gameObject.GetComponent<SpriteRenderer>();
         heroRB = gameObject.GetComponent<Rigidbody2D>();
         heroCl2D = gameObject.GetComponent<Collider2D>();
+    }
+
+    public void turnOnOffMovementAnimFORCE(){
+        heroAnimator.SetBool("isMoving", false);
     }
 
     public void turnOnOffMovementAnim(){
@@ -87,4 +92,10 @@ public class Hero : MonoBehaviour
             imDeath = true;
      	}
  	}
+
+    void OnTriggerEnter2D(Collider2D other){
+        if(other.transform.tag == "Trophie"){
+            other.GetComponent<ATrophies>().test();
+        }
+    }
 }
